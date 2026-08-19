@@ -1,6 +1,9 @@
+// Default to deployed Render backend URL if running in production without explicit VITE_API_BASE_URL
+const PROD_BACKEND_URL = 'https://job-ingestion-radar.onrender.com';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')}/api`
-  : '/api';
+  : (import.meta.env.PROD ? `${PROD_BACKEND_URL}/api` : '/api');
 
 export async function fetchJobs(params = {}) {
   const query = new URLSearchParams();
