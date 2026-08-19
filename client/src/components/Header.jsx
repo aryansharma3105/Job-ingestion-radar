@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, Database, Radio, RefreshCw } from 'lucide-react';
+import { Search, Database, Radio, RefreshCw, Sparkles } from 'lucide-react';
 
-export default function Header({ statusData, healthData, onRefresh, isRefreshing }) {
+export default function Header({ statusData, healthData, onRefresh, isRefreshing, onLogoClick, logoClicks }) {
   const isHealthy = healthData?.status === 'healthy';
   const totalJobs = statusData?.totalStoredJobs ?? healthData?.metrics?.totalJobsStored ?? 0;
   const sourceName = statusData?.sourceName || 'Remotive API';
@@ -9,14 +9,18 @@ export default function Header({ statusData, healthData, onRefresh, isRefreshing
   return (
     <header className="border-b-4 border-slate-900 bg-white/95 backdrop-blur sticky top-0 z-40 shadow-[0_4px_0_0_#0f172a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Title & Cartoon Logo */}
+        {/* Title & Cartoon Logo (Clickable Easter Egg) */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-yellow-300 border-2 border-slate-900 rounded-xl flex items-center justify-center text-slate-900 shadow-[3px_3px_0_0_#0f172a] transform -rotate-3 hover:rotate-0 transition">
+          <button
+            onClick={onLogoClick}
+            title={logoClicks > 0 ? `${5 - logoClicks} more clicks for a secret...` : 'Job Radar Logo'}
+            className="w-11 h-11 bg-yellow-300 border-2 border-slate-900 rounded-xl flex items-center justify-center text-slate-900 shadow-[3px_3px_0_0_#0f172a] transform -rotate-3 hover:rotate-6 hover:scale-110 active:scale-95 transition cursor-pointer select-none"
+          >
             <Search className="w-6 h-6 stroke-[2.5]" />
-          </div>
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold text-slate-900 tracking-tight font-mono uppercase">
+              <h1 className="text-xl font-extrabold text-slate-900 tracking-tight font-mono uppercase select-none">
                 Job Ingestion Radar
               </h1>
               <span className="bg-pink-400 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-slate-900 shadow-[1.5px_1.5px_0_0_#0f172a] -rotate-2">
