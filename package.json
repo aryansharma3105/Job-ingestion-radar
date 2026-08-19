@@ -1,0 +1,17 @@
+{
+  "name": "acdycon-job-ingestion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Job Listing Ingestion Dashboard - Acdyon Technologies Frontend Challenge Part 1",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspace=server --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "test:server": "npm test --workspace=server",
+    "build:client": "npm run build --workspace=client"
+  }
+}
