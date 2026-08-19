@@ -1,40 +1,25 @@
-# Architectural Decisions & Engineering Rationale
+# Engineering Decisions
 
-This document answers the three key technical evaluation questions for the **Acdyon Technologies Frontend Challenge (Part 1)**.
+## 1. Why this ingestion strategy over the obvious alternative we rejected?
 
----
+We decided to ingest data through a public API-based approach, taking advantage of the Remotive public jobs API, as opposed to scraping protected job platforms like LinkedIn, Indeed or Naukri directly.
 
-### 1. Why this ingestion strategy over the obvious alternative you rejected?
+The obvious approach was to scrape these platforms in the browser. We excluded those because they actively detect and limit access from automated agents, and scraping them would introduce unnecessary reliability, maintenance, and Terms of Service risk to this challenge.
 
-For a job listing ingestion system, the "obvious alternative" is directly scraping major job boards like LinkedIn, Indeed, or Wellfound using headless browsers (Puppeteer/Playwright). 
+Even with a permissible public API, we can still demonstrate the core ingestion engineering we wanted to show, including request timeouts, retry and exponential backoff, rate-limit handling, response validation, normalization, deduplication and stale-data recovery.
 
-I rejected direct scraping in favor of a **permitted public API + isolated Source Adapter pattern** for three critical engineering reasons:
+We also isolated the Remotive-specific parsing behind a source adapter, so another public source can be added later without modification of the core ingestion pipeline.
 
-1. **Legal & Terms of Service Compliance**: Protected commercial platforms explicitly prohibit automated scraping in their Terms of Service and deploy aggressive WAFs, CAPTCHAs, and IP rate limits. Engineering a system around CAPTCHA bypasses or stealth fingerprinting creates high legal risk and brittle architecture.
-2. **Pipeline Stability & Maintenance Cost**: HTML scrapers break frequently whenever a target website updates its DOM structure or class names. Public JSON APIs (like Remotive) provide structured, versioned data contracts that guarantee long-term system reliability.
-3. **Decoupled Architecture**: By building an isolated `SourceAdapter` interface, the ingestion pipeline is source-agnostic. Remotive is used as a low-risk public source for this challenge, but adding another public RSS feed or client endpoint requires creating a single adapter class without touching the core normalization, deduplication, database, or UI logic.
+## 2. One trade-off you made under the time limit, and what you’d do with a real week.
 
----
+With the time limit we decided to support one public job source (Remotive) instead of creating and supporting several source adapters. This let us focus on the reliability of the ingestion pipeline (validation, retries, rate-limit handling, deduplication, stale-data recovery) instead of trying to do everything at once.
 
-### 2. One trade-off made under the time limit, and what you would do with a real week.
+With a full week we would extend support to other allowable sources of public jobs via the same adapter architecture, improve automated integration and failure testing, add more detailed monitoring and alerting, and evaluate PostgreSQL for more scalable persistent storage.
 
-**The Trade-off**: Using **SQLite** (`node:sqlite` built-in module) as the single-file database engine instead of a distributed PostgreSQL database setup.
+## 3. Where did you use AI tools, and what did you personally verify or change afterward?
 
-*Why it was chosen*: SQLite allowed building a completely self-contained, zero-friction local and single-server application with zero external database provisioning or credential management required during evaluation.
+We leveraged AI tools during development to assist with project structure, boilerplate code, debugging, documentation, and test scaffolding. They were also used to aid in thinking about the ingestion architecture and possible failure scenarios.
 
-**What I would do with a full engineering week**:
-1. **Database Migration to PostgreSQL**: Replace SQLite with PostgreSQL (via Neon/Supabase or AWS RDS) using Prisma or Knex migrations to support multi-instance server deployments and concurrent writes.
-2. **Distributed Queue System**: Decouple HTTP requests from ingestion processing using a Redis-backed job queue (BullMQ/Celery) with worker pools. This would allow processing hundreds of source feeds asynchronously.
-3. **Multi-Source Aggregator & Schema Enrichment**: Expand source adapters to support RSS 2.0 / Atom feeds and implement LLM-based categorization to auto-tag salary ranges, remote region restrictions, and required skill sets.
+I can personally vouch for the core parts of the implementation: Remotive source adapter, data normalization and validation, retry and exponential backoff logic, rate-limit handling, deduplication, SQLite operations, API endpoints, frontend-to-backend communication, deployment configuration.
 
----
-
-### 3. Where did you use AI tools, and what did you personally verify or change afterward?
-
-**AI Tool Usage**:
-- AI assistance was used to generate initial React + Tailwind CSS dashboard boilerplate components, drafting Vitest test file skeletons, and formatting Markdown documentation templates.
-
-**What was personally verified, debugged, and re-engineered**:
-1. **Node v24 SQLite Engine**: When native C++ compilation of external SQLite packages failed on Windows with Node v24, I re-engineered the database layer to utilize Node's new native `node:sqlite` (`DatabaseSync`) module, ensuring zero native compilation errors and 100% standard SQL compliance.
-2. **Deduplication Metric Precision**: I personally verified the atomic SQL transaction logic to enforce strict tri-state metric boundaries: `INSERTED` (new external ID), `UPDATED` (existing ID with modified fields), and `DUPLICATE_SKIPPED` (existing ID with identical data), eliminating double-counting.
-3. **Resilience & Stale-Data Fallback**: Tested the exponential backoff retry loop against mock 429/500/timeout responses to verify that transient failures do not crash the process and that stale cached data is served seamlessly when external endpoints fail.
+I have tested the application with real data from Remotive and checked the main failure scenarios instead of generating code without verification. I also went through the generated implementation and changed things where needed to keep the system understandable and to be able to explain the engineering decisions in the follow-up discussion.
