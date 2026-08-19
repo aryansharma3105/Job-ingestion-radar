@@ -295,9 +295,11 @@ export default function App() {
                 <p className="text-slate-600">&gt; Status: Ingestion 100% Operational</p>
               </div>
 
-              <p className="text-xs text-slate-900 font-bold">
-                "You found the secret! Built with real code, zero fake APIs, and lots of passion." 🚀
-              </p>
+              <div className="p-3 bg-pink-100 border-2 border-slate-900 rounded-xl shadow-[2px_2px_0_0_#0f172a] text-center">
+                <p className="text-sm font-extrabold text-slate-900 font-sans leading-snug">
+                  "yayy! you cracked it now help me crack this company and hire me 😉🎉"
+                </p>
+              </div>
 
               <button
                 onClick={() => setShowEasterEgg(false)}
